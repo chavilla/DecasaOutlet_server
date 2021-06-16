@@ -31,7 +31,7 @@ class CreateProductsTable extends Migration
                 ->references('id')
                 ->on('users')
                 ->onDelete('cascade');
-            $table->string('description_kardex');
+          /*   $table->string('description_kardex'); */
             $table->timestamps();
         });
     }
