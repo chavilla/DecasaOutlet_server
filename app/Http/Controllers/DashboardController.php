@@ -25,11 +25,14 @@ class DashboardController extends Controller
 
     // Sales from month
     public function countSalesMonth() {
-        
-        return Invoice::whereBetween('created_at', [$this->_data_first_month_day(), $this->_data_last_month_day()])->sum('total'); 
+
+        return Invoice::whereBetween('created_at', [$this->_data_first_month_day(), $this->_data_last_month_day()])->sum('total');
     }
 
-    // sales from day 
+
+    // sales last mont
+
+    // sales from day
     public function countSalesDay() {
         return Invoice::whereBetween('created_at', [$this->_data_start_today(), $this->_data_end_today()])->sum('total');
     }
@@ -42,7 +45,7 @@ class DashboardController extends Controller
     }
 
         /** Actual month last day **/
-    public function _data_last_month_day() { 
+    public function _data_last_month_day() {
         $month = date('m');
         $year = date('Y');
         $day = date("d", mktime(0,0,0, $month+1, 0, $year));
@@ -53,7 +56,7 @@ class DashboardController extends Controller
     /* Actual day */
 
     public function _data_start_today() {
-        return date('Y-m-d') . ' 00:00:00';   
+        return date('Y-m-d') . ' 00:00:00';
     }
 
     public function _data_end_today() {

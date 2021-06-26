@@ -25,7 +25,6 @@ class CreateEntriesTable extends Migration
             ->references('user_id')
             ->on('users')
             ->onDelete('cascade');
-            $table->string('description');
             $table->timestamps();
         });
     }

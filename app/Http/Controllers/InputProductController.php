@@ -76,7 +76,7 @@ class InputProductController extends Controller
                 $product = Product::find($request->product_id);
                 $product->cost = $kardex->cost_pp;
                 $product->save();
-                
+
             } else {
 
                 $kardex = new Kardex();
