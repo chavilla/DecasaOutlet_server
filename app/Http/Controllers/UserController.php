@@ -17,7 +17,7 @@ class UserController extends Controller
     {
         //
 
-        $users = User::select('name', 'email', 'role', 'active')->get();
+        $users = User::select('id','name', 'email', 'role', 'active')->get();
 
         return response()->json([$users],200);
     }
@@ -108,13 +108,13 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         //
 
         try {
             //code...
-            $user = User::find($id);
+            $user = User::find($request->id);
             $user->name = $request->name;
             $user->email = $request->email;
 

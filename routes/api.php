@@ -82,4 +82,5 @@ Route::group(['middleware' => ['jwt.auth'], 'prefix' => 'v1'], function () {
     // User Routes
     Route::get('user', [UserController::class, 'index']);
     Route::post('user', [UserController::class, 'store']);
+    Route::put('user', [UserController::class, 'update']);
 });
