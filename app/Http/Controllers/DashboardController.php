@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CategoryProduct;
-use App\models\Client;
+use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Models\Product;

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\models\InputProduct;
+use App\Models\InputProduct;
 use App\Models\Kardex;
 use App\Models\Product;
 use Exception;
