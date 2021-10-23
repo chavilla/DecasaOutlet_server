@@ -23,12 +23,23 @@ class InvoiceController extends Controller
         //
         try {
             //code...
-            $invoices = Invoice::join('users','invoices.user_id','=','users.id')
-            ->join('clients','clients.id','=','invoices.client_id')
-            ->select('invoices.invoice_number as invoice', 'clients.name as clientName', 'clients.lastName as clientLastName', 'users.name as seller', 'invoices.created_at')
-            ->get();
+            $invoices = Invoice::join('users', 'invoices.user_id', '=', 'users.id')
+                ->join('clients', 'clients.id', '=', 'invoices.client_id')
+                ->select('invoices.id as id', 'invoices.invoice_number as invoice', 'clients.name as clientName', 'clients.lastName as clientLastName', 'users.name as seller', 'invoices.created_at')
+                ->get();
 
-            return response()->json([$invoices]);
+            $data = [];
+
+            /* get the details by invoice */
+            for ($i = 0; $i < sizeof($invoices); $i++) {
+                $data[$i] = $invoices[$i];
+                $detail = Detail::join('invoices', 'details.invoice_id', '=', 'invoices.id')
+                    ->join('products', 'details.product_id','=','products.id')
+                    ->select('products.description as description','amount', 'priceUnit', 'details.priceTotal')->where('details.invoice_id', $invoices[$i]->id)->get();
+                $data[$i]->details = $detail;
+            }
+
+            return response()->json([$data]);
 
         } catch (\Throwable $th) {
             return response()->json([
@@ -53,36 +64,36 @@ class InvoiceController extends Controller
         try {
             //creating and saving a new invoice...
             $invoice = new InVoice();
-            $this->saveInvoice($invoice, $request);
-            
+            $lastInvoice = $this->saveInvoice($invoice, $request);
+
             // Creating all Details
             $detailSize = sizeOf($request->details);
-    
-            for($i=0; $i < $detailSize; $i++) {
+
+            for ($i = 0; $i < $detailSize; $i++) {
                 $detail = new Detail();
-                $this->saveDetail($detail, $request->details[$i],$request->invoice_number);
+                $this->saveDetail($detail, $request->details[$i], $lastInvoice->id);
             }
-            
+
             DB::commit();
 
-            return response()->json('Venta realizada satisfactoriamente',200);
-
+            return response()->json('Venta realizada satisfactoriamente', 200);
         } catch (\Throwable $th) {
-             //throw $th;
-             DB::rollBack();
+            //throw $th;
+            DB::rollBack();
 
-             return response()->json([
-                 'msg' => 'Lo sentimos. Hubo un problema en el servidor',
-                 'error' => $th->getMessage(),
-                 'line' => $th->getLine(),
-             ], 422);
+            return response()->json([
+                'msg' => 'Lo sentimos. Hubo un problema en el servidor',
+                'error' => $th->getMessage(),
+                'line' => $th->getLine(),
+            ], 422);
         }
     }
 
     // Save an invoice
-    public function saveInvoice($invoice, $request){
+    public function saveInvoice($invoice, $request)
+    {
 
-        $invoice->invoice_number = $request->invoice_number; 
+        $invoice->invoice_number = $request->invoice_number;
         $invoice->user_id = Auth::user()->id;
         $invoice->client_id = $request->client_id;
         $invoice->payMode = $request->payMode;
@@ -91,10 +102,13 @@ class InvoiceController extends Controller
         $invoice->created_at = Carbon::now();
         $invoice->created_at = Carbon::now();
         $invoice->save(['timestamps' => false]);
+
+        return $invoice;
     }
 
     //save a detail 
-    public function saveDetail($detail, $request, $invoice_number) {
+    public function saveDetail($detail, $request, $invoice_number)
+    {
 
         $detail->invoice_id = $invoice_number;
         $detail->product_id = $request['id'];
@@ -104,42 +118,41 @@ class InvoiceController extends Controller
         $detail->save();
 
         $this->updateKardex($request['id'], $request['amount'], $request['priceTotal'], $request['priceTotalSale'], $invoice_number);
-
     }
 
-    public function updateKardex($product_id, $amount, $priceUnit, $priceTotal, $invoice_number) {
-        
+    public function updateKardex($product_id, $amount, $priceUnit, $priceTotal, $invoice_number)
+    {
+
         $last_kardex = Kardex::where('product_id', $product_id)->orderBy('created_at', 'DESC')->take(1)->join('products', 'product_id', '=', 'products.id')->select('products.description', 'kardexes.description', 'cost_pp', 'input_amount', 'input_value', 'output_amount', 'output_value', 'balance_amount', 'balance_value', 'kardexes.created_at')->get();
 
         $kardex = new Kardex();
         $kardex->product_id = $product_id;
-        $kardex->description = 'Venta Factura '. $invoice_number;
+        $kardex->description = 'Venta Factura ' . $invoice_number;
         $kardex->input_amount = 0;
         $kardex->input_value = 0;
         $kardex->output_amount = $amount;
         $kardex->output_value = $amount * $priceUnit;
         $kardex->balance_amount = $last_kardex[0]->balance_amount - $amount;
-        $kardex->balance_value =  $last_kardex[0]->balance_value - $priceTotal ;
+        $kardex->balance_value =  $last_kardex[0]->balance_value - $priceTotal;
         $kardex->cost_pp =  $last_kardex[0]->cost_pp;
 
         $kardex->save();
         $this->decrementStock($product_id, $amount);
-
     }
 
-    public function decrementStock($product_id, $amount) {
-         //update the product
-         Product::find($product_id)->decrement('stock', $amount);
+    public function decrementStock($product_id, $amount)
+    {
+        //update the product
+        Product::find($product_id)->decrement('stock', $amount);
     }
 
-    public function getLastNoInvoice(){
-        $lastInvoice =Invoice::latest()->first();
-        if($lastInvoice){
+    public function getLastNoInvoice()
+    {
+        $lastInvoice = Invoice::latest()->first();
+        if ($lastInvoice) {
             return response()->json($lastInvoice->invoice_number);
-        }
-        else {
+        } else {
             return response()->json("0000");
         }
     }
-
 }
