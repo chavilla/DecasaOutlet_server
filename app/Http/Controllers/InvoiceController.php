@@ -25,7 +25,7 @@ class InvoiceController extends Controller
             //code...
             $invoices = Invoice::join('users', 'invoices.user_id', '=', 'users.id')
                 ->join('clients', 'clients.id', '=', 'invoices.client_id')
-                ->select('invoices.id as id', 'invoices.invoice_number as invoice', 'clients.name as clientName', 'clients.lastName as clientLastName', 'users.name as seller', 'invoices.created_at')
+                ->select('invoices.id as id', 'invoices.invoice_number as invoice', 'invoices.created_at','clients.name as clientName', 'clients.lastName as clientLastName', 'clients.ruc as clientRuc', 'clients.phone', 'clients.email','users.name as seller', 'invoices.created_at')
                 ->get();
 
             $data = [];
