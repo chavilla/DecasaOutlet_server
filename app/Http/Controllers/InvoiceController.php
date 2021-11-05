@@ -71,7 +71,7 @@ class InvoiceController extends Controller
 
             for ($i = 0; $i < $detailSize; $i++) {
                 $detail = new Detail();
-                $this->saveDetail($detail, $request->details[$i], $lastInvoice->id);
+                $this->saveDetail($detail, $request->details[$i], $lastInvoice->id, $lastInvoice->invoice_number);
             }
 
             DB::commit();
@@ -106,11 +106,11 @@ class InvoiceController extends Controller
         return $invoice;
     }
 
-    //save a detail 
-    public function saveDetail($detail, $request, $invoice_number)
+    //save a detail
+    public function saveDetail($detail, $request, $invoice_id, $invoice_number)
     {
 
-        $detail->invoice_id = $invoice_number;
+        $detail->invoice_id = $invoice_id;
         $detail->product_id = $request['id'];
         $detail->amount = $request['amount'];
         $detail->priceUnit = $request['priceTotal'];
@@ -131,9 +131,9 @@ class InvoiceController extends Controller
         $kardex->input_amount = 0;
         $kardex->input_value = 0;
         $kardex->output_amount = $amount;
-        $kardex->output_value = $amount * $priceUnit;
+        $kardex->output_value = $amount * $last_kardex[0]->cost_pp;
         $kardex->balance_amount = $last_kardex[0]->balance_amount - $amount;
-        $kardex->balance_value =  $last_kardex[0]->balance_value - $priceTotal;
+        $kardex->balance_value =  $last_kardex[0]->balance_value - ($amount * $last_kardex[0]->cost_pp);
         $kardex->cost_pp =  $last_kardex[0]->cost_pp;
 
         $kardex->save();
